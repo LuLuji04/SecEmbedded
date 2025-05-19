@@ -87,7 +87,7 @@ void I2C_DC_Motor_Write(I2C_HandleTypeDef *I2Cx,uint8_t I2C_Addr,uint8_t addr,ui
 void Turn_On_LED( uint8_t LED_NUM );
 
 
-__IO uint16_t	adcx[4] = { 0 };
+__IO uint16_t	adcx[5][4] = { 0 };
 uint8_t		Tx1_Buffer[8] = { 0 };
 uint8_t		Rx2_Buffer[8] = { 0 };
 uint8_t		state __attribute__( (section( "NO_INIT" ), zero_init) );
@@ -430,7 +430,7 @@ void read_light()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[1];
+        t[i] = (float) adcx[i][1];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -446,7 +446,7 @@ void read_gas()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[3];
+        t[i] = (float) adcx[i][3];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -462,7 +462,7 @@ void read_alcohol()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[0];
+        t[i] = (float) adcx[i][0];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -478,7 +478,7 @@ void read_flame()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[2];
+        t[i] = (float) adcx[i][2];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -792,7 +792,7 @@ int main( void )
 
     MX_IWDG_Init();                                         /* 看门狗程序初始化 */
 
-    HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx, 4 );      /* 开启ADC转换 */
+    for(int i = 0;i < 5;i ++) HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[i], 4 );      /* 开启ADC转换 */
 
     MX_IWDG_Start();                                        /* 开启看门狗 */
     set_buffer( Rx2_Buffer );
@@ -821,14 +821,14 @@ int main( void )
 			  Red = 1;
         MX_IWDG_Refresh();
 			  initcnt++;
-			  if(initcnt >= 10){
-					  initcnt = 0;
-						MX_GPIO_Init();  
-					  MX_DMA_Init();
-						MX_ADC3_Init();
-						MX_I2C1_Init();
-						MX_USART1_UART_Init();
-					  HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx, 4 );
+			  if(initcnt % 2 == 0){
+					if(initcnt == 0) initcnt = 0;
+					MX_GPIO_Init();  
+					MX_DMA_Init();
+					MX_ADC3_Init();
+					MX_I2C1_Init();
+					MX_USART1_UART_Init();
+					HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[(initcnt-2)/2], 4);
 				}
         for ( int i = 0; i < 4; i++ )
             seq[i] = 0;
@@ -854,7 +854,18 @@ int main( void )
                 seq[2] = 3;
             }
             if ( seq[0] == 1 && seq[1] == 2 && seq[2] == 3 )
+            {
                 update_state_and_cnt();
+                seq[3] = 4;
+            }
+            if(seq[0] == 1 && seq[1] == 2 && seq[2] == 3 && seq[3] == 4)
+            {
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
+            }
+                
         }else  {
             read_all_sensors();
             seq[0] = 1;
@@ -875,7 +886,15 @@ int main( void )
                     Tx1_Buffer[0] = 0x00; 
                     I2C_ZLG7290_Write( &hi2c1, 0x70, ZLG_WRITE_ADDRESS1, Tx1_Buffer, 8 );
                 }
+                seq[3] = 2;
 							}
+            if(seq[0] == 1 && seq[1] == 4 && seq[2] == 3 && seq[3] == 2)
+            {
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
+            }
         }
         HAL_Delay( cnt * 50 + 10000 );
 
