@@ -118,9 +118,9 @@ typedef struct backup {
     float   now_alcohol;
     float   now_flame;
     uint8_t checksum;
-} Backup[3];
+} Backup;
 
-Backup* backup_data;
+Backup backup_data[3];
 /* USER CODE END PV */
 
 void SystemClock_Config( void );
@@ -153,17 +153,17 @@ void MX_IWDG_Refresh( void )
 
 
 /* backup function definitions */
-void update_checksum()
+void update_checksum_num(int num)
 {
-    uint8_t * ckpt	= (uint8_t *) backup_data;
-    int	len	= sizeof(backup_data);
+    uint8_t * ckpt	= (uint8_t *) backup_data[num];
+    int	len	= sizeof(backup_data[num]);
     uint8_t temp	= 0;
 
     for ( int i = 0; i < len - 1; i++ )
     {
         temp ^= ckpt[i];
     }
-    backup_data->checksum = temp;
+    backup_data[num]->checksum = temp;
 }
 
 
@@ -185,8 +185,9 @@ void set_buffer( uint8_t Buffer_value[8] )
     for ( int i = 0; i < 8; i++ )   /* 更新备份数据 */
     {
         backup_data->Rx2_Buffer[i] = Buffer_value[i];
+        update_checksum_num(i);              /* 更新backup_data->checksum */
     }
-    update_checksum();              /* 更新backup_data->checksum */
+    
 }
 
 
@@ -203,8 +204,10 @@ void set_now_light( float now_light_value )
     }
     now_light_check = temp;
 
-    backup_data->now_light = now_light_value;       /* 更新备份数据 */
-    update_checksum();                              /* 更新backup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_light = now_light_value;       /* 更新备份数据 */  
+        update_checksum_num(i);                              /* 更新backup_data->checksum */    
+    }
 }
 
 void set_now_gas( float now_gas_value )
@@ -219,8 +222,10 @@ void set_now_gas( float now_gas_value )
     }
     now_gas_check = temp;
 
-    backup_data->now_gas = now_gas_value;       /* 更新备份数据 */
-    update_checksum();                              /* 更新backup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_gas = now_gas_value;       /* 更新备份数据 */
+        update_checksum_num(i);                              /* 更新backup_data->checksum */
+    }
 }
 
 void set_now_alcohol( float now_alcohol_value )
@@ -236,8 +241,10 @@ void set_now_alcohol( float now_alcohol_value )
     }
     now_alcohol_check = temp;
 
-    backup_data->now_alcohol = now_alcohol_value;       /* 更新备份数据 */
-    update_checksum();                              /* 更新backup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_alcohol = now_alcohol_value;       /* 更新备份数据 */
+        update_checksum_num(i);                              /* 更新backup_data->checksum */
+    }
 }
 
 void set_now_flame( float now_flame_value )
@@ -253,24 +260,17 @@ void set_now_flame( float now_flame_value )
     }
     now_flame_check = temp;
 
-    backup_data->now_flame = now_flame_value;       /* 更新备份数据 */
-    update_checksum();                              /* 更新backup_data->checksum */
-}
-
-void recovery_handle()
-{
-    set_buffer( backup_data->Rx2_Buffer );
-    set_now_light( backup_data->now_light );
-    set_now_gas(backup_data->now_gas);
-    set_now_alcohol(backup_data->now_alcohol);
-		set_now_flame(backup_data->now_flame);
-    printf( "[Warning] data is broken, recovering from heap\n" );
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_flame = now_flame_value;       /* 更新备份数据 */
+        update_checksum_num(i);                              /* 更新backup_data->checksum */
+    }
 }
 
 
-int verify_checksum()   /* 校验整个备份数据结构体 */
+
+int verify_checksum_num(int num)   /* 校验整个备份数据结构体 */
 {
-    uint8_t * ckpt	= (uint8_t *) backup_data;
+    uint8_t * ckpt	= (uint8_t *) backup_data[num];
     int	len	= sizeof(backup_data);
     uint8_t temp	= 0;
 
@@ -280,6 +280,40 @@ int verify_checksum()   /* 校验整个备份数据结构体 */
     }
 
     return(temp); /* 返回0说明校验通过 */
+}
+
+int verify_checksum()
+{
+    int valid[3] = {0, 0, 0};
+    int valid_index = -1;
+    for(int i = 0; i < 3; i++){
+        if(verify_checksum_num(i) == 0){
+            valid[i] = 1;
+            valid_index = i;
+        }
+    }
+    if(valid_index == -1){
+        return 0; /* 冷启动 */
+    }
+    for(int i = 0; i < 3; i++){
+        if(valid[i] == 0){
+            for (int j = 0; j < 8; j++){
+                backup_data[i]->Rx2_Buffer[j] = backup_data[valid_index]->Rx2_Buffer[j];
+            }
+            backup_data[i]->now_light = backup_data[valid_index]->now_light;
+            backup_data[i]->now_gas = backup_data[valid_index]->now_gas;
+            backup_data[i]->now_alcohol = backup_data[valid_index]->now_alcohol;
+            backup_data[i]->now_flame = backup_data[valid_index]->now_flame;
+            return 0;
+        }
+    }
+    printf( "[Warning] data[%d] is broken, recovering from heap\n", valid_index );
+    set_buffer( backup_data[valid_index]->Rx2_Buffer );
+    set_now_light( backup_data[valid_index]->now_light );
+    set_now_gas(backup_data[valid_index]->now_gas);
+    set_now_alcohol(backup_data[valid_index]->now_alcohol);
+    set_now_flame(backup_data[i]->now_flame);
+    return 1;
 }
 
 
@@ -293,21 +327,18 @@ uint8_t* get_buffer()
 
     if ( temp1 == buffer_check ) /* 校验当前数据 */
     { /* set_buffer(Rx2_Buffer); */
-        for ( int j = 0; j < 8; j++ )
-        {
-            backup_data->Rx2_Buffer[j] = Rx2_Buffer[j];
+    for (int i = 0; i < 3 ; i++){
+            for ( int j = 0; j < 8; j++ )
+            {
+                backup_data[i]->Rx2_Buffer[j] = Rx2_Buffer[j];
+            }
         }
-        update_checksum();
         return(Rx2_Buffer);
-    }else    {
-        int temp2 = verify_checksum();          /* 当前数据校验不通过，校验备份数据 */
-        if ( temp2 == 0 )
+    }else {
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* 备份数据校验通过，使用备份数据更新Rx2_Buffer */
-            printf( "[Warning] stack data 'Rx2_Buffer' is broken, recovering from heap\n" );
-            return(Rx2_Buffer);
-        }else
             HAL_NVIC_SystemReset();         /* 校验不通过，冷启动 */
+        }
     }
 }
 
@@ -323,20 +354,16 @@ float get_now_light()
 
     if ( temp1 == now_light_check ) /* 校验当前数据 */
     {
-        /* set_now_light(now_light); */
-        backup_data->now_light = now_light;
-        update_checksum();
-
+        for (int i = 0; i < 3 ; i++){
+            /* set_now_light(now_light); */
+            backup_data[i]->now_light = now_light;
+        }
         return(now_light);
     }else    {
-        int temp2 = verify_checksum();          /* 当前数据校验不通过，校验备份数据 */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* 备份数据校验通过，使用备份数据更新now_light */
-            printf( "[Warning] stack data 'now_light' is broken, recovering from heap\n" );
-            return(now_light);
-        }else
             HAL_NVIC_SystemReset();         /* 校验不通过，冷启动 */
+        }            
     }
 }
 
@@ -352,19 +379,17 @@ float get_now_gas()
     if ( temp1 == now_gas_check ) /* 校验当前数据 */
     {
         /* set_now_light(now_light); */
-        backup_data->now_gas = now_gas;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_gas = now_gas;
+            update_checksum_num(i);
+        }
 
         return(now_gas);
     }else    {
-        int temp2 = verify_checksum();          /* 当前数据校验不通过，校验备份数据 */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* 备份数据校验通过，使用备份数据更新now_light */
-            printf( "[Warning] stack data 'now_gas' is broken, recovering from heap\n" );
-            return(now_gas);
-        }else
             HAL_NVIC_SystemReset();         /* 校验不通过，冷启动 */
+        }            
     }
 }
 
@@ -379,19 +404,17 @@ float get_now_alcohol()
 
     if ( temp1 == now_alcohol_check ) /* 校验当前数据 */
     {
-        backup_data->now_alcohol = now_alcohol;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_alcohol = now_alcohol;
+            update_checksum_num(i);
+        }
 
         return(now_alcohol);
-    }else    {
-        int temp2 = verify_checksum();          /* 当前数据校验不通过，校验备份数据 */
-        if ( temp2 == 0 )
+    }else  {
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* 备份数据校验通过，使用备份数据更新now_light */
-            printf( "[Warning] stack data 'now_alcohol' is broken, recovering from heap\n" );
-            return(now_alcohol);
-        }else
             HAL_NVIC_SystemReset();         /* 校验不通过，冷启动 */
+        }
     }
 }
 
@@ -406,19 +429,17 @@ float get_now_flame()
 
     if ( temp1 == now_flame_check ) /* 校验当前数据 */
     {
-        backup_data->now_flame = now_flame;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_flame = now_flame;
+            update_checksum_num(i);
+        }
 
         return(now_flame);
     }else    {
-        int temp2 = verify_checksum();          /* 当前数据校验不通过，校验备份数据 */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* 备份数据校验通过，使用备份数据更新now_light */
-            printf( "[Warning] stack data 'now_flame' is broken, recovering from heap\n" );
-            return(now_flame);
-        }else
             HAL_NVIC_SystemReset();         /* 校验不通过，冷启动 */
+        }
     }
 }
 
@@ -782,7 +803,8 @@ int main( void )
     MX_IWDG_Start();                                        /* 开启看门狗 */
     set_buffer( Rx2_Buffer );
     
-	printf("\n\r");
+		
+		printf("\n\r");
     printf("\n\r-------------------------------------------------\r\n");
     printf("\n\r 多传感器显示与按键切换系统\r\n");
     printf("\n\r 按键1-4分别切换不同传感器的显示\r\n");
