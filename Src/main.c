@@ -87,7 +87,7 @@ void I2C_DC_Motor_Write(I2C_HandleTypeDef *I2Cx,uint8_t I2C_Addr,uint8_t addr,ui
 void Turn_On_LED( uint8_t LED_NUM );
 
 
-__IO uint16_t	adcx[4] = { 0 };
+__IO uint16_t	adcx[5][4] = { 0 };
 uint8_t		Tx1_Buffer[8] = { 0 };
 uint8_t		Rx2_Buffer[8] = { 0 };
 uint8_t		state __attribute__( (section( "NO_INIT" ), zero_init) );
@@ -109,6 +109,7 @@ uint8_t		now_alcohol_check = 0;
 uint8_t		now_flame_check = 0;
 uint32_t	unStartFlag __attribute__( (section( "NO_INIT" ), zero_init) );
 int sensor_type __attribute__( (section( "NO_INIT" ), zero_init) );
+int sensor_type_backup[3];
 
 /* backup data struct */
 typedef struct backup {
@@ -169,12 +170,12 @@ void update_checksum_num(int num)
 
 void set_buffer( uint8_t Buffer_value[8] )
 {
-    for ( int i = 0; i < 8; i++ ) /* ¸üĞÂRx2_Buffer */
+    for ( int i = 0; i < 8; i++ ) /* æ›´æ–°Rx2_Buffer */
     {
         Rx2_Buffer[i] = Buffer_value[i];
     }
 
-    /* ¸üĞÂbuffer_check */
+    /* æ›´æ–°buffer_check */
     uint8_t temp = 0;
     for ( int i = 0; i < 8; i++ )
     {
@@ -182,10 +183,10 @@ void set_buffer( uint8_t Buffer_value[8] )
     }
     buffer_check = temp;
 
-    for ( int i = 0; i < 8; i++ )   /* ¸üĞÂ±¸·İÊı¾İ */
+    for ( int i = 0; i < 8; i++ )   /* æ›´æ–°å¤‡ä»½æ•°æ® */
     {
         backup_data->Rx2_Buffer[i] = Buffer_value[i];
-        update_checksum_num(i);              /* ¸üĞÂbackup_data->checksum */
+        update_checksum_num(i);              /* æ›´æ–°backup_data->checksum */
     }
     
 }
@@ -193,9 +194,9 @@ void set_buffer( uint8_t Buffer_value[8] )
 
 void set_now_light( float now_light_value )
 {
-    now_light = now_light_value;    /* ¸üĞÂnow_light */
+    now_light = now_light_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_light_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_light_value); i++ )
@@ -205,14 +206,14 @@ void set_now_light( float now_light_value )
     now_light_check = temp;
 
     for (int i = 0; i < 3 ; i++){
-        backup_data[i]->now_light = now_light_value;       /* ¸üĞÂ±¸·İÊı¾İ */  
-        update_checksum_num(i);                              /* ¸üĞÂbackup_data->checksum */    
+        backup_data[i]->now_light = now_light_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */  
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */    
     }
 }
 
 void set_now_gas( float now_gas_value )
 {
-    now_gas = now_gas_value;    /* ¸üĞÂnow_light */
+    now_gas = now_gas_value;    /* æ›´æ–°now_light */
 
     uint8_t * pt	= (uint8_t *) &now_gas_value;
     uint8_t temp	= 0;
@@ -223,16 +224,16 @@ void set_now_gas( float now_gas_value )
     now_gas_check = temp;
 
     for (int i = 0; i < 3 ; i++){
-        backup_data[i]->now_gas = now_gas_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-        update_checksum_num(i);                              /* ¸üĞÂbackup_data->checksum */
+        backup_data[i]->now_gas = now_gas_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
     }
 }
 
 void set_now_alcohol( float now_alcohol_value )
 {
-    now_alcohol = now_alcohol_value;    /* ¸üĞÂnow_light */
+    now_alcohol = now_alcohol_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_alcohol_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_alcohol_value); i++ )
@@ -242,16 +243,16 @@ void set_now_alcohol( float now_alcohol_value )
     now_alcohol_check = temp;
 
     for (int i = 0; i < 3 ; i++){
-        backup_data[i]->now_alcohol = now_alcohol_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-        update_checksum_num(i);                              /* ¸üĞÂbackup_data->checksum */
+        backup_data[i]->now_alcohol = now_alcohol_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
     }
 }
 
 void set_now_flame( float now_flame_value )
 {
-    now_flame = now_flame_value;    /* ¸üĞÂnow_light */
+    now_flame = now_flame_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_flame_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_flame_value); i++ )
@@ -261,14 +262,12 @@ void set_now_flame( float now_flame_value )
     now_flame_check = temp;
 
     for (int i = 0; i < 3 ; i++){
-        backup_data[i]->now_flame = now_flame_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-        update_checksum_num(i);                              /* ¸üĞÂbackup_data->checksum */
+        backup_data[i]->now_flame = now_flame_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
     }
 }
 
-
-
-int verify_checksum_num(int num)   /* Ğ£ÑéÕû¸ö±¸·İÊı¾İ½á¹¹Ìå */
+int verify_checksum_num(int num)   /* æ ¡éªŒæ•´ä¸ªå¤‡ä»½æ•°æ®ç»“æ„ä½“ */
 {
     uint8_t * ckpt	= (uint8_t *) backup_data[num];
     int	len	= sizeof(backup_data);
@@ -279,7 +278,7 @@ int verify_checksum_num(int num)   /* Ğ£ÑéÕû¸ö±¸·İÊı¾İ½á¹¹Ìå */
         temp ^= ckpt[i];
     }
 
-    return(temp); /* ·µ»Ø0ËµÃ÷Ğ£ÑéÍ¨¹ı */
+    return(temp); /* è¿”å›0è¯´æ˜æ ¡éªŒé€šè¿‡ */
 }
 
 int verify_checksum()
@@ -293,7 +292,7 @@ int verify_checksum()
         }
     }
     if(valid_index == -1){
-        return 0; /* ÀäÆô¶¯ */
+        return 0; /* å†·å¯åŠ¨ */
     }
     for(int i = 0; i < 3; i++){
         if(valid[i] == 0){
@@ -325,7 +324,7 @@ uint8_t* get_buffer()
         temp1 ^= Rx2_Buffer[i];
     }
 
-    if ( temp1 == buffer_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == buffer_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     { /* set_buffer(Rx2_Buffer); */
     for (int i = 0; i < 3 ; i++){
             for ( int j = 0; j < 8; j++ )
@@ -337,7 +336,7 @@ uint8_t* get_buffer()
     }else {
         if (verify_checksum() == 0)
         {
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
         }
     }
 }
@@ -352,7 +351,7 @@ float get_now_light()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_light_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_light_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
         for (int i = 0; i < 3 ; i++){
             /* set_now_light(now_light); */
@@ -362,7 +361,7 @@ float get_now_light()
     }else    {
         if (verify_checksum() == 0)
         {
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
         }            
     }
 }
@@ -376,7 +375,7 @@ float get_now_gas()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_gas_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_gas_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
         /* set_now_light(now_light); */
         for (int i = 0; i < 3 ; i++){
@@ -388,7 +387,7 @@ float get_now_gas()
     }else    {
         if (verify_checksum() == 0)
         {
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
         }            
     }
 }
@@ -402,7 +401,7 @@ float get_now_alcohol()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_alcohol_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_alcohol_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
         for (int i = 0; i < 3 ; i++){
             backup_data[i]->now_alcohol = now_alcohol;
@@ -413,7 +412,7 @@ float get_now_alcohol()
     }else  {
         if (verify_checksum() == 0)
         {
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
         }
     }
 }
@@ -427,7 +426,7 @@ float get_now_flame()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_flame_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_flame_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
         for (int i = 0; i < 3 ; i++){
             backup_data[i]->now_flame = now_flame;
@@ -438,7 +437,7 @@ float get_now_flame()
     }else    {
         if (verify_checksum() == 0)
         {
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
         }
     }
 }
@@ -450,7 +449,7 @@ void read_light()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[1];
+        t[i] = (float) adcx[i][1];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -466,7 +465,7 @@ void read_gas()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[3];
+        t[i] = (float) adcx[i][3];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -482,7 +481,7 @@ void read_alcohol()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[0];
+        t[i] = (float) adcx[i][0];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -498,7 +497,7 @@ void read_flame()
     float	sum	= 0;
     for ( int i = 0; i < 5; i++ )
     {
-        t[i] = (float) adcx[2];
+        t[i] = (float) adcx[i][2];
         if ( maxt < t[i] )
             maxt = t[i];
         if ( mint > t[i] )
@@ -520,67 +519,81 @@ void read_all_sensors()
 void show_sensor_data()
 {
     
-    // ¸ù¾İ²»Í¬´«¸ĞÆ÷ÀàĞÍ£¬µ÷ÕûÏÔÊ¾¸ñÊ½£¨±¶ÂÊºÍĞ¡ÊıµãÎ»ÖÃ£©
-    int scaling_factor = 10000000;  // Ä¬ÈÏ¹âÃô´«¸ĞÆ÷µÄ±¶ÂÊ
-    int decimal_pos = 7;            // Ğ¡ÊıµãÎ»ÖÃ
+    // æ ¹æ®ä¸åŒä¼ æ„Ÿå™¨ç±»å‹ï¼Œè°ƒæ•´æ˜¾ç¤ºæ ¼å¼ï¼ˆå€ç‡å’Œå°æ•°ç‚¹ä½ç½®ï¼‰
+    int scaling_factor = 10000000;  // é»˜è®¤å…‰æ•ä¼ æ„Ÿå™¨çš„å€ç‡
+    int decimal_pos = 7;            // å°æ•°ç‚¹ä½ç½®
     
     switch(sensor_type)
     {
-        case 0: // ¾Æ¾«
+        case 0: // é…’ç²¾
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 1: // ¹âÃô
+        case 1: // å…‰æ•
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 2: // »ğÑæ
+        case 2: // ç«ç„°
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 3: // ÆøÌå
+        case 3: // æ°”ä½“
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
     }
     
     int tmp = 0;
-    // ÔÚ×îÇ°ÃæÏÔÊ¾´«¸ĞÆ÷ÀàĞÍ
+    // åœ¨æœ€å‰é¢æ˜¾ç¤ºä¼ æ„Ÿå™¨ç±»å‹
     Tx1_Buffer[0] = 0x00;
     I2C_ZLG7290_Write( &hi2c1, 0x70, ZLG_WRITE_ADDRESS1, Tx1_Buffer, 8 );
     
-    // µÚÒ»Î»ÏÔÊ¾´«¸ĞÆ÷ÀàĞÍ£ºA-¾Æ¾«£¬L-¹âÃô£¬F-»ğÑæ£¬G-ÆøÌå
+    // ç¬¬ä¸€ä½æ˜¾ç¤ºä¼ æ„Ÿå™¨ç±»å‹ï¼šA-é…’ç²¾ï¼ŒL-å…‰æ•ï¼ŒF-ç«ç„°ï¼ŒG-æ°”ä½“
     switch(sensor_type)
     {
-        case 0: // ¾Æ¾« - ÏÔÊ¾×ÖÄ¸A
+        case 0: // é…’ç²¾ - æ˜¾ç¤ºå­—æ¯A
             tmp = now_alcohol * scaling_factor;
-            Tx1_Buffer[0] = 0xEE; // ×ÖÄ¸AµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0xEE; // å­—æ¯Açš„æ®µç 
             break;
-        case 1: // ¹âÃô - ÏÔÊ¾×ÖÄ¸L
+        case 1: // å…‰æ• - æ˜¾ç¤ºå­—æ¯L
             tmp = now_light * scaling_factor;
-            Tx1_Buffer[0] = 0x70; // ×ÖÄ¸LµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0x70; // å­—æ¯Lçš„æ®µç 
             break;
-        case 2: // »ğÑæ - ÏÔÊ¾×ÖÄ¸F
+        case 2: // ç«ç„° - æ˜¾ç¤ºå­—æ¯F
             tmp = now_flame * scaling_factor;
-            Tx1_Buffer[0] = 0x8E; // ×ÖÄ¸FµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0x8E; // å­—æ¯Fçš„æ®µç 
             break;
-        case 3: // ÆøÌå - ÏÔÊ¾×ÖÄ¸G
+        case 3: // æ°”ä½“ - æ˜¾ç¤ºå­—æ¯G
             tmp = now_gas * scaling_factor;
-            Tx1_Buffer[0] = 0xBC; // ×ÖÄ¸GµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0xBC; // å­—æ¯Gçš„æ®µç 
+            break;
+        default:
+            int tmp_backup[3] = 0;
+            for(int i = 0;i<3;i++)
+            {
+                tmp_backup[sensor_type_backup[i]]++;
+            }
+            for(int i = 0;i<3;i++)
+            {
+                if(tmp_backup[i] >= 2)
+                    sensor_type = tmp_backup[i];
+            }
+            if(sensor_type != 0 && sensor_type != 1 && sensor_type != 2 && sensor_type != 3)
+                HAL_NVIC_SystemReset();
             break;
     }
     
     Rx2_Buffer[0] = Tx1_Buffer[0];
     set_buffer(Rx2_Buffer);
     
-    // ÏÔÊ¾ÊıÖµ
+    // æ˜¾ç¤ºæ•°å€¼
     for (int i = 0; i < 7; i++)
     {
         int flag = tmp % 10;
         tmp /= 10;
         
         if (i == decimal_pos)
-            switch_flag(flag, 1);  // ¼ÓĞ¡Êıµã
+            switch_flag(flag, 1);  // åŠ å°æ•°ç‚¹
         else
             switch_flag(flag, 0);
             
@@ -596,16 +609,16 @@ void Turn_On_LED( uint8_t LED_NUM )
     switch ( LED_NUM )
     {
     case 3:
-        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_RESET );        /*µãÁÁD4µÆ*/
+        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_RESET );        /*ç‚¹äº®D4ç¯*/
         break;
     case 2:
-        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_RESET );        /*µãÁÁD3µÆ*/
+        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_RESET );        /*ç‚¹äº®D3ç¯*/
         break;
     case 1:
-        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_RESET );         /*µãÁÁD2µÆ*/
+        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_RESET );         /*ç‚¹äº®D2ç¯*/
         break;
     case 0:
-        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_RESET );        /*µãÁÁD1µÆ*/
+        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_RESET );        /*ç‚¹äº®D1ç¯*/
         break;
     default:
         break;
@@ -617,16 +630,16 @@ void Turn_Off_LED( uint8_t LED_NUM )
     switch ( LED_NUM )
     {
     case 3:
-        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_SET );        /*¹Ø±ÕD4µÆ*/
+        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_SET );        /*å…³é—­D4ç¯*/
         break;
     case 2:
-        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_SET );        /*¹Ø±ÕD3µÆ*/
+        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_SET );        /*å…³é—­D3ç¯*/
         break;
     case 1:
-        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_SET );         /*¹Ø±ÕD2µÆ*/
+        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_SET );         /*å…³é—­D2ç¯*/
         break;
     case 0:
-        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_SET );        /*¹Ø±ÕD1µÆ*/
+        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_SET );        /*å…³é—­D1ç¯*/
         break;
     default:
         break;
@@ -636,24 +649,24 @@ void Turn_Off_LED( uint8_t LED_NUM )
 
 void marquee()
 {
-	/* ÅÜÂíµÆ */
+	/* è·‘é©¬ç¯ */
 
-//¾Æ¾«
+//é…’ç²¾
 			if ( 2 * get_now_alcohol() > 3 )
 				Turn_On_LED( 0 );
 			else
 				Turn_Off_LED( 0 );
- //¹âÃô
+ //å…‰æ•
 			if ( get_now_light() > 2 )
 				Turn_On_LED( 1 );
 			else
 				Turn_Off_LED( 1 );
- //»ğÑæ
+ //ç«ç„°
 			if ( 2 * get_now_flame() > 5 )
 				Turn_On_LED( 2 );
 			else
 				Turn_Off_LED( 2 );
- //ÆøÌå
+ //æ°”ä½“
 			if ( get_now_gas() < 0.08 )
 				Turn_On_LED( 3 );
 			else
@@ -710,7 +723,7 @@ void DC_Task(uint8_t iKey)
 
 void motor_v()
 {
-    /* Ö±Á÷µç»ú */
+    /* ç›´æµç”µæœº */
     if ( state )
     {
         if ( 2 * get_now_light() > 3 && get_now_light() <= 2)
@@ -728,10 +741,10 @@ void motor_v()
 
 void update_state_and_cnt()
 {
-    if ( pre_state == HAL_GPIO_ReadPin( GPIOG, GPIO_PIN_9 ) )       /* ¸üĞÂstateºÍcnt */
+    if ( pre_state == HAL_GPIO_ReadPin( GPIOG, GPIO_PIN_9 ) )       /* æ›´æ–°stateå’Œcnt */
     {
         cnt += 1;
-        if ( cnt > 20 )                                         /* ·ÀÖ¹cntÒç³ö */
+        if ( cnt > 20 )                                         /* é˜²æ­¢cntæº¢å‡º */
             cnt = 20;
     }else  {
         cnt		= 1;
@@ -740,15 +753,15 @@ void update_state_and_cnt()
     if ( cnt >= 3 )
         state = pre_state;
     printf( "State %d, cnt %d;\n\n", state, cnt );
-    printf("[´«¸ĞÆ÷Êı¾İ]\n");
-    printf("¾Æ¾«´«¸ĞÆ÷: %.7f\n", now_alcohol);
-    printf("¹âÃô´«¸ĞÆ÷: %.7f\n", now_light);
-    printf("ÆøÌå´«¸ĞÆ÷: %.7f\n", now_gas);
-		printf("»ğÑæ´«¸ĞÆ÷: %.7f\n", now_flame);
+    printf("[ä¼ æ„Ÿå™¨æ•°æ®]\n");
+    printf("é…’ç²¾ä¼ æ„Ÿå™¨: %.7f\n", now_alcohol);
+    printf("å…‰æ•ä¼ æ„Ÿå™¨: %.7f\n", now_light);
+    printf("æ°”ä½“ä¼ æ„Ÿå™¨: %.7f\n", now_gas);
+		printf("ç«ç„°ä¼ æ„Ÿå™¨: %.7f\n", now_flame);
 }
 
-uint8_t flag;//²»Í¬µÄ°´¼üÓĞ²»Í¬µÄ±êÖ¾Î»Öµ
-uint8_t flag1 = 0;//ÖĞ¶Ï±êÖ¾Î»£¬Ã¿´Î°´¼ü²úÉúÒ»´ÎÖĞ¶Ï£¬²¢¿ªÊ¼¶ÁÈ¡8¸öÊıÂë¹ÜµÄÖµ
+uint8_t flag;//ä¸åŒçš„æŒ‰é”®æœ‰ä¸åŒçš„æ ‡å¿—ä½å€¼
+uint8_t flag1 = 0;//ä¸­æ–­æ ‡å¿—ä½ï¼Œæ¯æ¬¡æŒ‰é”®äº§ç”Ÿä¸€æ¬¡ä¸­æ–­ï¼Œå¹¶å¼€å§‹è¯»å–8ä¸ªæ•°ç ç®¡çš„å€¼
 void swtich_key(void);
 uint8_t Rx1_Buffer[1]={0};
 int main( void )
@@ -761,7 +774,7 @@ int main( void )
     if ( unStartFlag == 0xAA55AA55 && verify_checksum() == 0)
     {
 			
-    }else{ /* ÀäÆô¶¯ */
+    }else{ /* å†·å¯åŠ¨ */
 			   if(initsum == 0){
 						 cnt		= 0;
 						 pre_state	= 0;
@@ -796,18 +809,18 @@ int main( void )
     MX_USART1_UART_Init();
 
 
-    MX_IWDG_Init();                                         /* ¿´ÃÅ¹·³ÌĞò³õÊ¼»¯ */
+    MX_IWDG_Init();                                         /* çœ‹é—¨ç‹—ç¨‹åºåˆå§‹åŒ– */
 
-    HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx, 4 );      /* ¿ªÆôADC×ª»» */
+    for(int i = 0;i < 5;i ++) HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[i], 4 );      /* å¼€å¯ADCè½¬æ¢ */
 
-    MX_IWDG_Start();                                        /* ¿ªÆô¿´ÃÅ¹· */
+    MX_IWDG_Start();                                        /* å¼€å¯çœ‹é—¨ç‹— */
     set_buffer( Rx2_Buffer );
     
 		
 		printf("\n\r");
     printf("\n\r-------------------------------------------------\r\n");
-    printf("\n\r ¶à´«¸ĞÆ÷ÏÔÊ¾Óë°´¼üÇĞ»»ÏµÍ³\r\n");
-    printf("\n\r °´¼ü1-4·Ö±ğÇĞ»»²»Í¬´«¸ĞÆ÷µÄÏÔÊ¾\r\n");
+    printf("\n\r å¤šä¼ æ„Ÿå™¨æ˜¾ç¤ºä¸æŒ‰é”®åˆ‡æ¢ç³»ç»Ÿ\r\n");
+    printf("\n\r æŒ‰é”®1-4åˆ†åˆ«åˆ‡æ¢ä¸åŒä¼ æ„Ÿå™¨çš„æ˜¾ç¤º\r\n");
     printf("\n\r-------------------------------------------------\r\n");
     
 		int initcnt = 0;
@@ -818,23 +831,23 @@ int main( void )
 				if(flag1 == 1)
 				{
 					flag1 = 0;
-					I2C_ZLG7290_Read(&hi2c1,0x71,0x01,Rx1_Buffer,1);//¶Á¼üÖµ
-					printf("\n\r°´¼ü¼üÖµ = %#x\r\n",Rx1_Buffer[0]);//Ïë´®¿Ú·¢ËÍ¼üÖµ
-					swtich_key();//É¨Ãè¼üÖµ£¬Ğ´±êÖ¾Î»
+					I2C_ZLG7290_Read(&hi2c1,0x71,0x01,Rx1_Buffer,1);//è¯»é”®å€¼
+					printf("\n\ræŒ‰é”®é”®å€¼ = %#x\r\n",Rx1_Buffer[0]);//æƒ³ä¸²å£å‘é€é”®å€¼
+					swtich_key();//æ‰«æé”®å€¼ï¼Œå†™æ ‡å¿—ä½
 				}		
 
         //Remote_Infrared_KeyDeCode();
 			  Red = 1;
         MX_IWDG_Refresh();
 			  initcnt++;
-			  if(initcnt >= 10){
-					  initcnt = 0;
-						MX_GPIO_Init();  
-					  MX_DMA_Init();
-						MX_ADC3_Init();
-						MX_I2C1_Init();
-						MX_USART1_UART_Init();
-					  HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx, 4 );
+			  if(initcnt % 2 == 0){
+					if(initcnt == 0) initcnt = 0;
+					MX_GPIO_Init();  
+					MX_DMA_Init();
+					MX_ADC3_Init();
+					MX_I2C1_Init();
+					MX_USART1_UART_Init();
+					HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[(initcnt-2)/2], 4);
 				}
         for ( int i = 0; i < 4; i++ )
             seq[i] = 0;
@@ -860,7 +873,18 @@ int main( void )
                 seq[2] = 3;
             }
             if ( seq[0] == 1 && seq[1] == 2 && seq[2] == 3 )
+            {
                 update_state_and_cnt();
+                seq[3] = 4;
+            }
+            if(seq[0] == 1 && seq[1] == 2 && seq[2] == 3 && seq[3] == 4)
+            {
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
+            }
+                
         }else  {
             read_all_sensors();
             seq[0] = 1;
@@ -881,7 +905,15 @@ int main( void )
                     Tx1_Buffer[0] = 0x00; 
                     I2C_ZLG7290_Write( &hi2c1, 0x70, ZLG_WRITE_ADDRESS1, Tx1_Buffer, 8 );
                 }
+                seq[3] = 2;
 							}
+            if(seq[0] == 1 && seq[1] == 4 && seq[2] == 3 && seq[3] == 2)
+            {
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
+            }
         }
         HAL_Delay( cnt * 50 + 10000 );
 
@@ -894,19 +926,35 @@ void swtich_key(void)
 	{
         case 0x1C:
 					flag = 1;
-					sensor_type = 0;			
+					sensor_type = 0;
+                    for(int i = 0;i<3;i++)
+                    {
+                        sensor_type_backup[i] = 0;
+                    }		
           break;
         case 0x1B:	
 					flag = 2;
 				sensor_type = 1;	
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 1;
+                }		
           break;
         case 0x1A:	
 					flag = 3;
-				sensor_type = 2;	
+				sensor_type = 2;
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 2;
+                }			
           break;
         case 0x14:
 					flag = 4;
-				sensor_type = 3;	
+				sensor_type = 3;
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 3;
+                }			
           break;   
 				case 0x13:
 					flag = 5;
@@ -1058,7 +1106,7 @@ void SystemClock_Config( void )  /* modified */
 int fputc( int ch, FILE *f )
 {
     while ( (USART1->SR & 0X40) == 0 )
-        ;            /* Ñ­»··¢ËÍ,Ö±µ½·¢ËÍÍê±Ï */
+        ;            /* å¾ªç¯å‘é€,ç›´åˆ°å‘é€å®Œæ¯• */
     USART1->DR = (uint8_t) ch;
     return(ch);
 }
