@@ -654,23 +654,40 @@ void marquee()
 //酒精
 			if ( 2 * get_now_alcohol() > 3 )
 				Turn_On_LED( 0 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
 			else
 				Turn_Off_LED( 0 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
  //光敏
 			if ( get_now_light() > 2 )
 				Turn_On_LED( 1 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
 			else
 				Turn_Off_LED( 1 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
  //火焰
 			if ( 2 * get_now_flame() > 5 )
 				Turn_On_LED( 2 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
 			else
 				Turn_Off_LED( 2 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
  //气体
 			if ( get_now_gas() < 0.08 )
 				Turn_On_LED( 3 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
+                HAL_Delay(2);
 			else
 				Turn_Off_LED( 3 );
+                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
+                HAL_Delay(2);
+
 
 }
 
@@ -841,7 +858,7 @@ int main( void )
         MX_IWDG_Refresh();
 			  initcnt++;
 			  if(initcnt % 2 == 0){
-					if(initcnt == 0) initcnt = 0;
+					if(initcnt == 10) initcnt = 0;
 					MX_GPIO_Init();  
 					MX_DMA_Init();
 					MX_ADC3_Init();
@@ -875,14 +892,6 @@ int main( void )
             if ( seq[0] == 1 && seq[1] == 2 && seq[2] == 3 )
             {
                 update_state_and_cnt();
-                seq[3] = 4;
-            }
-            if(seq[0] == 1 && seq[1] == 2 && seq[2] == 3 && seq[3] == 4)
-            {
-                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
-                HAL_Delay(2);
-                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
-                HAL_Delay(2);
             }
                 
         }else  {
@@ -905,15 +914,8 @@ int main( void )
                     Tx1_Buffer[0] = 0x00; 
                     I2C_ZLG7290_Write( &hi2c1, 0x70, ZLG_WRITE_ADDRESS1, Tx1_Buffer, 8 );
                 }
-                seq[3] = 2;
 							}
-            if(seq[0] == 1 && seq[1] == 4 && seq[2] == 3 && seq[3] == 2)
-            {
-                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_SET);
-                HAL_Delay(2);
-                HAL_GPIO_WritePin(GPIOG,GPIO_PIN_6,GPIO_PIN_RESET);
-                HAL_Delay(2);
-            }
+
         }
         HAL_Delay( cnt * 50 + 10000 );
 
