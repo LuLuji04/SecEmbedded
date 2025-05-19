@@ -121,7 +121,7 @@ typedef struct backup {
     uint8_t checksum;
 } Backup;
 
-Backup* backup_data;
+Backup backup_data[3];
 /* USER CODE END PV */
 
 void SystemClock_Config( void );
@@ -154,28 +154,28 @@ void MX_IWDG_Refresh( void )
 
 
 /* backup function definitions */
-void update_checksum()
+void update_checksum_num(int num)
 {
-    uint8_t * ckpt	= (uint8_t *) backup_data;
-    int	len	= sizeof(backup_data);
+    uint8_t * ckpt	= (uint8_t *) backup_data[num];
+    int	len	= sizeof(backup_data[num]);
     uint8_t temp	= 0;
 
     for ( int i = 0; i < len - 1; i++ )
     {
         temp ^= ckpt[i];
     }
-    backup_data->checksum = temp;
+    backup_data[num]->checksum = temp;
 }
 
 
 void set_buffer( uint8_t Buffer_value[8] )
 {
-    for ( int i = 0; i < 8; i++ ) /* ¸üĞÂRx2_Buffer */
+    for ( int i = 0; i < 8; i++ ) /* æ›´æ–°Rx2_Buffer */
     {
         Rx2_Buffer[i] = Buffer_value[i];
     }
 
-    /* ¸üĞÂbuffer_check */
+    /* æ›´æ–°buffer_check */
     uint8_t temp = 0;
     for ( int i = 0; i < 8; i++ )
     {
@@ -183,19 +183,20 @@ void set_buffer( uint8_t Buffer_value[8] )
     }
     buffer_check = temp;
 
-    for ( int i = 0; i < 8; i++ )   /* ¸üĞÂ±¸·İÊı¾İ */
+    for ( int i = 0; i < 8; i++ )   /* æ›´æ–°å¤‡ä»½æ•°æ® */
     {
         backup_data->Rx2_Buffer[i] = Buffer_value[i];
+        update_checksum_num(i);              /* æ›´æ–°backup_data->checksum */
     }
-    update_checksum();              /* ¸üĞÂbackup_data->checksum */
+    
 }
 
 
 void set_now_light( float now_light_value )
 {
-    now_light = now_light_value;    /* ¸üĞÂnow_light */
+    now_light = now_light_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_light_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_light_value); i++ )
@@ -204,13 +205,15 @@ void set_now_light( float now_light_value )
     }
     now_light_check = temp;
 
-    backup_data->now_light = now_light_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-    update_checksum();                              /* ¸üĞÂbackup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_light = now_light_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */  
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */    
+    }
 }
 
 void set_now_gas( float now_gas_value )
 {
-    now_gas = now_gas_value;    /* ¸üĞÂnow_light */
+    now_gas = now_gas_value;    /* æ›´æ–°now_light */
 
     uint8_t * pt	= (uint8_t *) &now_gas_value;
     uint8_t temp	= 0;
@@ -220,15 +223,17 @@ void set_now_gas( float now_gas_value )
     }
     now_gas_check = temp;
 
-    backup_data->now_gas = now_gas_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-    update_checksum();                              /* ¸üĞÂbackup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_gas = now_gas_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
+    }
 }
 
 void set_now_alcohol( float now_alcohol_value )
 {
-    now_alcohol = now_alcohol_value;    /* ¸üĞÂnow_light */
+    now_alcohol = now_alcohol_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_alcohol_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_alcohol_value); i++ )
@@ -237,15 +242,17 @@ void set_now_alcohol( float now_alcohol_value )
     }
     now_alcohol_check = temp;
 
-    backup_data->now_alcohol = now_alcohol_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-    update_checksum();                              /* ¸üĞÂbackup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_alcohol = now_alcohol_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
+    }
 }
 
 void set_now_flame( float now_flame_value )
 {
-    now_flame = now_flame_value;    /* ¸üĞÂnow_light */
+    now_flame = now_flame_value;    /* æ›´æ–°now_light */
 
-    /* ¸üĞÂnow_light_check */
+    /* æ›´æ–°now_light_check */
     uint8_t * pt	= (uint8_t *) &now_flame_value;
     uint8_t temp	= 0;
     for ( int i = 0; i < sizeof(now_flame_value); i++ )
@@ -254,24 +261,15 @@ void set_now_flame( float now_flame_value )
     }
     now_flame_check = temp;
 
-    backup_data->now_flame = now_flame_value;       /* ¸üĞÂ±¸·İÊı¾İ */
-    update_checksum();                              /* ¸üĞÂbackup_data->checksum */
+    for (int i = 0; i < 3 ; i++){
+        backup_data[i]->now_flame = now_flame_value;       /* æ›´æ–°å¤‡ä»½æ•°æ® */
+        update_checksum_num(i);                              /* æ›´æ–°backup_data->checksum */
+    }
 }
 
-void recovery_handle()
+int verify_checksum_num(int num)   /* æ ¡éªŒæ•´ä¸ªå¤‡ä»½æ•°æ®ç»“æ„ä½“ */
 {
-    set_buffer( backup_data->Rx2_Buffer );
-    set_now_light( backup_data->now_light );
-    set_now_gas(backup_data->now_gas);
-    set_now_alcohol(backup_data->now_alcohol);
-	set_now_flame(backup_data->now_flame);
-    printf( "[Warning] data is broken, recovering from heap\n" );
-}
-
-
-int verify_checksum()   /* Ğ£ÑéÕû¸ö±¸·İÊı¾İ½á¹¹Ìå */
-{
-    uint8_t * ckpt	= (uint8_t *) backup_data;
+    uint8_t * ckpt	= (uint8_t *) backup_data[num];
     int	len	= sizeof(backup_data);
     uint8_t temp	= 0;
 
@@ -280,7 +278,41 @@ int verify_checksum()   /* Ğ£ÑéÕû¸ö±¸·İÊı¾İ½á¹¹Ìå */
         temp ^= ckpt[i];
     }
 
-    return(temp); /* ·µ»Ø0ËµÃ÷Ğ£ÑéÍ¨¹ı */
+    return(temp); /* è¿”å›0è¯´æ˜æ ¡éªŒé€šè¿‡ */
+}
+
+int verify_checksum()
+{
+    int valid[3] = {0, 0, 0};
+    int valid_index = -1;
+    for(int i = 0; i < 3; i++){
+        if(verify_checksum_num(i) == 0){
+            valid[i] = 1;
+            valid_index = i;
+        }
+    }
+    if(valid_index == -1){
+        return 0; /* å†·å¯åŠ¨ */
+    }
+    for(int i = 0; i < 3; i++){
+        if(valid[i] == 0){
+            for (int j = 0; j < 8; j++){
+                backup_data[i]->Rx2_Buffer[j] = backup_data[valid_index]->Rx2_Buffer[j];
+            }
+            backup_data[i]->now_light = backup_data[valid_index]->now_light;
+            backup_data[i]->now_gas = backup_data[valid_index]->now_gas;
+            backup_data[i]->now_alcohol = backup_data[valid_index]->now_alcohol;
+            backup_data[i]->now_flame = backup_data[valid_index]->now_flame;
+            return 0;
+        }
+    }
+    printf( "[Warning] data[%d] is broken, recovering from heap\n", valid_index );
+    set_buffer( backup_data[valid_index]->Rx2_Buffer );
+    set_now_light( backup_data[valid_index]->now_light );
+    set_now_gas(backup_data[valid_index]->now_gas);
+    set_now_alcohol(backup_data[valid_index]->now_alcohol);
+    set_now_flame(backup_data[i]->now_flame);
+    return 1;
 }
 
 
@@ -292,23 +324,20 @@ uint8_t* get_buffer()
         temp1 ^= Rx2_Buffer[i];
     }
 
-    if ( temp1 == buffer_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == buffer_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     { /* set_buffer(Rx2_Buffer); */
-        for ( int j = 0; j < 8; j++ )
-        {
-            backup_data->Rx2_Buffer[j] = Rx2_Buffer[j];
+    for (int i = 0; i < 3 ; i++){
+            for ( int j = 0; j < 8; j++ )
+            {
+                backup_data[i]->Rx2_Buffer[j] = Rx2_Buffer[j];
+            }
         }
-        update_checksum();
         return(Rx2_Buffer);
-    }else    {
-        int temp2 = verify_checksum();          /* µ±Ç°Êı¾İĞ£Ñé²»Í¨¹ı£¬Ğ£Ñé±¸·İÊı¾İ */
-        if ( temp2 == 0 )
+    }else {
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* ±¸·İÊı¾İĞ£ÑéÍ¨¹ı£¬Ê¹ÓÃ±¸·İÊı¾İ¸üĞÂRx2_Buffer */
-            printf( "[Warning] stack data 'Rx2_Buffer' is broken, recovering from heap\n" );
-            return(Rx2_Buffer);
-        }else
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
+        }
     }
 }
 
@@ -322,22 +351,18 @@ float get_now_light()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_light_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_light_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
-        /* set_now_light(now_light); */
-        backup_data->now_light = now_light;
-        update_checksum();
-
+        for (int i = 0; i < 3 ; i++){
+            /* set_now_light(now_light); */
+            backup_data[i]->now_light = now_light;
+        }
         return(now_light);
     }else    {
-        int temp2 = verify_checksum();          /* µ±Ç°Êı¾İĞ£Ñé²»Í¨¹ı£¬Ğ£Ñé±¸·İÊı¾İ */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* ±¸·İÊı¾İĞ£ÑéÍ¨¹ı£¬Ê¹ÓÃ±¸·İÊı¾İ¸üĞÂnow_light */
-            printf( "[Warning] stack data 'now_light' is broken, recovering from heap\n" );
-            return(now_light);
-        }else
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
+        }            
     }
 }
 
@@ -350,22 +375,20 @@ float get_now_gas()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_gas_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_gas_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
         /* set_now_light(now_light); */
-        backup_data->now_gas = now_gas;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_gas = now_gas;
+            update_checksum_num(i);
+        }
 
         return(now_gas);
     }else    {
-        int temp2 = verify_checksum();          /* µ±Ç°Êı¾İĞ£Ñé²»Í¨¹ı£¬Ğ£Ñé±¸·İÊı¾İ */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* ±¸·İÊı¾İĞ£ÑéÍ¨¹ı£¬Ê¹ÓÃ±¸·İÊı¾İ¸üĞÂnow_light */
-            printf( "[Warning] stack data 'now_gas' is broken, recovering from heap\n" );
-            return(now_gas);
-        }else
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
+        }            
     }
 }
 
@@ -378,21 +401,19 @@ float get_now_alcohol()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_alcohol_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_alcohol_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
-        backup_data->now_alcohol = now_alcohol;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_alcohol = now_alcohol;
+            update_checksum_num(i);
+        }
 
         return(now_alcohol);
-    }else    {
-        int temp2 = verify_checksum();          /* µ±Ç°Êı¾İĞ£Ñé²»Í¨¹ı£¬Ğ£Ñé±¸·İÊı¾İ */
-        if ( temp2 == 0 )
+    }else  {
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* ±¸·İÊı¾İĞ£ÑéÍ¨¹ı£¬Ê¹ÓÃ±¸·İÊı¾İ¸üĞÂnow_light */
-            printf( "[Warning] stack data 'now_alcohol' is broken, recovering from heap\n" );
-            return(now_alcohol);
-        }else
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
+        }
     }
 }
 
@@ -405,21 +426,19 @@ float get_now_flame()
         temp1 ^= pt[i];
     }
 
-    if ( temp1 == now_flame_check ) /* Ğ£Ñéµ±Ç°Êı¾İ */
+    if ( temp1 == now_flame_check ) /* æ ¡éªŒå½“å‰æ•°æ® */
     {
-        backup_data->now_flame = now_flame;
-        update_checksum();
+        for (int i = 0; i < 3 ; i++){
+            backup_data[i]->now_flame = now_flame;
+            update_checksum_num(i);
+        }
 
         return(now_flame);
     }else    {
-        int temp2 = verify_checksum();          /* µ±Ç°Êı¾İĞ£Ñé²»Í¨¹ı£¬Ğ£Ñé±¸·İÊı¾İ */
-        if ( temp2 == 0 )
+        if (verify_checksum() == 0)
         {
-            recovery_handle();              /* ±¸·İÊı¾İĞ£ÑéÍ¨¹ı£¬Ê¹ÓÃ±¸·İÊı¾İ¸üĞÂnow_light */
-            printf( "[Warning] stack data 'now_flame' is broken, recovering from heap\n" );
-            return(now_flame);
-        }else
-            HAL_NVIC_SystemReset();         /* Ğ£Ñé²»Í¨¹ı£¬ÀäÆô¶¯ */
+            HAL_NVIC_SystemReset();         /* æ ¡éªŒä¸é€šè¿‡ï¼Œå†·å¯åŠ¨ */
+        }
     }
 }
 
@@ -500,53 +519,53 @@ void read_all_sensors()
 void show_sensor_data()
 {
     
-    // ¸ù¾İ²»Í¬´«¸ĞÆ÷ÀàĞÍ£¬µ÷ÕûÏÔÊ¾¸ñÊ½£¨±¶ÂÊºÍĞ¡ÊıµãÎ»ÖÃ£©
-    int scaling_factor = 10000000;  // Ä¬ÈÏ¹âÃô´«¸ĞÆ÷µÄ±¶ÂÊ
-    int decimal_pos = 7;            // Ğ¡ÊıµãÎ»ÖÃ
+    // æ ¹æ®ä¸åŒä¼ æ„Ÿå™¨ç±»å‹ï¼Œè°ƒæ•´æ˜¾ç¤ºæ ¼å¼ï¼ˆå€ç‡å’Œå°æ•°ç‚¹ä½ç½®ï¼‰
+    int scaling_factor = 10000000;  // é»˜è®¤å…‰æ•ä¼ æ„Ÿå™¨çš„å€ç‡
+    int decimal_pos = 7;            // å°æ•°ç‚¹ä½ç½®
     
     switch(sensor_type)
     {
-        case 0: // ¾Æ¾«
+        case 0: // é…’ç²¾
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 1: // ¹âÃô
+        case 1: // å…‰æ•
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 2: // »ğÑæ
+        case 2: // ç«ç„°
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
-        case 3: // ÆøÌå
+        case 3: // æ°”ä½“
             scaling_factor = 10000000;
             decimal_pos = 7;
             break;
     }
     
     int tmp = 0;
-    // ÔÚ×îÇ°ÃæÏÔÊ¾´«¸ĞÆ÷ÀàĞÍ
+    // åœ¨æœ€å‰é¢æ˜¾ç¤ºä¼ æ„Ÿå™¨ç±»å‹
     Tx1_Buffer[0] = 0x00;
     I2C_ZLG7290_Write( &hi2c1, 0x70, ZLG_WRITE_ADDRESS1, Tx1_Buffer, 8 );
     
-    // µÚÒ»Î»ÏÔÊ¾´«¸ĞÆ÷ÀàĞÍ£ºA-¾Æ¾«£¬L-¹âÃô£¬F-»ğÑæ£¬G-ÆøÌå
+    // ç¬¬ä¸€ä½æ˜¾ç¤ºä¼ æ„Ÿå™¨ç±»å‹ï¼šA-é…’ç²¾ï¼ŒL-å…‰æ•ï¼ŒF-ç«ç„°ï¼ŒG-æ°”ä½“
     switch(sensor_type)
     {
-        case 0: // ¾Æ¾« - ÏÔÊ¾×ÖÄ¸A
+        case 0: // é…’ç²¾ - æ˜¾ç¤ºå­—æ¯A
             tmp = now_alcohol * scaling_factor;
-            Tx1_Buffer[0] = 0xEE; // ×ÖÄ¸AµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0xEE; // å­—æ¯Açš„æ®µç 
             break;
-        case 1: // ¹âÃô - ÏÔÊ¾×ÖÄ¸L
+        case 1: // å…‰æ• - æ˜¾ç¤ºå­—æ¯L
             tmp = now_light * scaling_factor;
-            Tx1_Buffer[0] = 0x70; // ×ÖÄ¸LµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0x70; // å­—æ¯Lçš„æ®µç 
             break;
-        case 2: // »ğÑæ - ÏÔÊ¾×ÖÄ¸F
+        case 2: // ç«ç„° - æ˜¾ç¤ºå­—æ¯F
             tmp = now_flame * scaling_factor;
-            Tx1_Buffer[0] = 0x8E; // ×ÖÄ¸FµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0x8E; // å­—æ¯Fçš„æ®µç 
             break;
-        case 3: // ÆøÌå - ÏÔÊ¾×ÖÄ¸G
+        case 3: // æ°”ä½“ - æ˜¾ç¤ºå­—æ¯G
             tmp = now_gas * scaling_factor;
-            Tx1_Buffer[0] = 0xBC; // ×ÖÄ¸GµÄ¶ÎÂë
+            Tx1_Buffer[0] = 0xBC; // å­—æ¯Gçš„æ®µç 
             break;
         default:
             int tmp_backup[3] = 0;
@@ -567,14 +586,14 @@ void show_sensor_data()
     Rx2_Buffer[0] = Tx1_Buffer[0];
     set_buffer(Rx2_Buffer);
     
-    // ÏÔÊ¾ÊıÖµ
+    // æ˜¾ç¤ºæ•°å€¼
     for (int i = 0; i < 7; i++)
     {
         int flag = tmp % 10;
         tmp /= 10;
         
         if (i == decimal_pos)
-            switch_flag(flag, 1);  // ¼ÓĞ¡Êıµã
+            switch_flag(flag, 1);  // åŠ å°æ•°ç‚¹
         else
             switch_flag(flag, 0);
             
@@ -590,16 +609,16 @@ void Turn_On_LED( uint8_t LED_NUM )
     switch ( LED_NUM )
     {
     case 3:
-        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_RESET );        /*µãÁÁD4µÆ*/
+        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_RESET );        /*ç‚¹äº®D4ç¯*/
         break;
     case 2:
-        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_RESET );        /*µãÁÁD3µÆ*/
+        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_RESET );        /*ç‚¹äº®D3ç¯*/
         break;
     case 1:
-        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_RESET );         /*µãÁÁD2µÆ*/
+        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_RESET );         /*ç‚¹äº®D2ç¯*/
         break;
     case 0:
-        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_RESET );        /*µãÁÁD1µÆ*/
+        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_RESET );        /*ç‚¹äº®D1ç¯*/
         break;
     default:
         break;
@@ -611,16 +630,16 @@ void Turn_Off_LED( uint8_t LED_NUM )
     switch ( LED_NUM )
     {
     case 3:
-        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_SET );        /*¹Ø±ÕD4µÆ*/
+        HAL_GPIO_WritePin( GPIOH, GPIO_PIN_15, GPIO_PIN_SET );        /*å…³é—­D4ç¯*/
         break;
     case 2:
-        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_SET );        /*¹Ø±ÕD3µÆ*/
+        HAL_GPIO_WritePin( GPIOB, GPIO_PIN_15, GPIO_PIN_SET );        /*å…³é—­D3ç¯*/
         break;
     case 1:
-        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_SET );         /*¹Ø±ÕD2µÆ*/
+        HAL_GPIO_WritePin( GPIOC, GPIO_PIN_0, GPIO_PIN_SET );         /*å…³é—­D2ç¯*/
         break;
     case 0:
-        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_SET );        /*¹Ø±ÕD1µÆ*/
+        HAL_GPIO_WritePin( GPIOF, GPIO_PIN_10, GPIO_PIN_SET );        /*å…³é—­D1ç¯*/
         break;
     default:
         break;
@@ -630,24 +649,24 @@ void Turn_Off_LED( uint8_t LED_NUM )
 
 void marquee()
 {
-	/* ÅÜÂíµÆ */
+	/* è·‘é©¬ç¯ */
 
-//¾Æ¾«
+//é…’ç²¾
 			if ( 2 * get_now_alcohol() > 3 )
 				Turn_On_LED( 0 );
 			else
 				Turn_Off_LED( 0 );
- //¹âÃô
+ //å…‰æ•
 			if ( get_now_light() > 2 )
 				Turn_On_LED( 1 );
 			else
 				Turn_Off_LED( 1 );
- //»ğÑæ
+ //ç«ç„°
 			if ( 2 * get_now_flame() > 5 )
 				Turn_On_LED( 2 );
 			else
 				Turn_Off_LED( 2 );
- //ÆøÌå
+ //æ°”ä½“
 			if ( get_now_gas() < 0.08 )
 				Turn_On_LED( 3 );
 			else
@@ -704,7 +723,7 @@ void DC_Task(uint8_t iKey)
 
 void motor_v()
 {
-    /* Ö±Á÷µç»ú */
+    /* ç›´æµç”µæœº */
     if ( state )
     {
         if ( 2 * get_now_light() > 3 && get_now_light() <= 2)
@@ -722,10 +741,10 @@ void motor_v()
 
 void update_state_and_cnt()
 {
-    if ( pre_state == HAL_GPIO_ReadPin( GPIOG, GPIO_PIN_9 ) )       /* ¸üĞÂstateºÍcnt */
+    if ( pre_state == HAL_GPIO_ReadPin( GPIOG, GPIO_PIN_9 ) )       /* æ›´æ–°stateå’Œcnt */
     {
         cnt += 1;
-        if ( cnt > 20 )                                         /* ·ÀÖ¹cntÒç³ö */
+        if ( cnt > 20 )                                         /* é˜²æ­¢cntæº¢å‡º */
             cnt = 20;
     }else  {
         cnt		= 1;
@@ -734,15 +753,15 @@ void update_state_and_cnt()
     if ( cnt >= 3 )
         state = pre_state;
     printf( "State %d, cnt %d;\n\n", state, cnt );
-    printf("[´«¸ĞÆ÷Êı¾İ]\n");
-    printf("¾Æ¾«´«¸ĞÆ÷: %.7f\n", now_alcohol);
-    printf("¹âÃô´«¸ĞÆ÷: %.7f\n", now_light);
-    printf("ÆøÌå´«¸ĞÆ÷: %.7f\n", now_gas);
-		printf("»ğÑæ´«¸ĞÆ÷: %.7f\n", now_flame);
+    printf("[ä¼ æ„Ÿå™¨æ•°æ®]\n");
+    printf("é…’ç²¾ä¼ æ„Ÿå™¨: %.7f\n", now_alcohol);
+    printf("å…‰æ•ä¼ æ„Ÿå™¨: %.7f\n", now_light);
+    printf("æ°”ä½“ä¼ æ„Ÿå™¨: %.7f\n", now_gas);
+		printf("ç«ç„°ä¼ æ„Ÿå™¨: %.7f\n", now_flame);
 }
 
-uint8_t flag;//²»Í¬µÄ°´¼üÓĞ²»Í¬µÄ±êÖ¾Î»Öµ
-uint8_t flag1 = 0;//ÖĞ¶Ï±êÖ¾Î»£¬Ã¿´Î°´¼ü²úÉúÒ»´ÎÖĞ¶Ï£¬²¢¿ªÊ¼¶ÁÈ¡8¸öÊıÂë¹ÜµÄÖµ
+uint8_t flag;//ä¸åŒçš„æŒ‰é”®æœ‰ä¸åŒçš„æ ‡å¿—ä½å€¼
+uint8_t flag1 = 0;//ä¸­æ–­æ ‡å¿—ä½ï¼Œæ¯æ¬¡æŒ‰é”®äº§ç”Ÿä¸€æ¬¡ä¸­æ–­ï¼Œå¹¶å¼€å§‹è¯»å–8ä¸ªæ•°ç ç®¡çš„å€¼
 void swtich_key(void);
 uint8_t Rx1_Buffer[1]={0};
 int main( void )
@@ -755,7 +774,7 @@ int main( void )
     if ( unStartFlag == 0xAA55AA55 && verify_checksum() == 0)
     {
 			
-    }else{ /* ÀäÆô¶¯ */
+    }else{ /* å†·å¯åŠ¨ */
 			   if(initsum == 0){
 						 cnt		= 0;
 						 pre_state	= 0;
@@ -790,18 +809,18 @@ int main( void )
     MX_USART1_UART_Init();
 
 
-    MX_IWDG_Init();                                         /* ¿´ÃÅ¹·³ÌĞò³õÊ¼»¯ */
+    MX_IWDG_Init();                                         /* çœ‹é—¨ç‹—ç¨‹åºåˆå§‹åŒ– */
 
-    for(int i = 0;i < 5;i ++) HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[i], 4 );      /* ¿ªÆôADC×ª»» */
+    for(int i = 0;i < 5;i ++) HAL_ADC_Start_DMA( &hadc3, (uint32_t *) adcx[i], 4 );      /* å¼€å¯ADCè½¬æ¢ */
 
-    MX_IWDG_Start();                                        /* ¿ªÆô¿´ÃÅ¹· */
+    MX_IWDG_Start();                                        /* å¼€å¯çœ‹é—¨ç‹— */
     set_buffer( Rx2_Buffer );
     
 		
 		printf("\n\r");
     printf("\n\r-------------------------------------------------\r\n");
-    printf("\n\r ¶à´«¸ĞÆ÷ÏÔÊ¾Óë°´¼üÇĞ»»ÏµÍ³\r\n");
-    printf("\n\r °´¼ü1-4·Ö±ğÇĞ»»²»Í¬´«¸ĞÆ÷µÄÏÔÊ¾\r\n");
+    printf("\n\r å¤šä¼ æ„Ÿå™¨æ˜¾ç¤ºä¸æŒ‰é”®åˆ‡æ¢ç³»ç»Ÿ\r\n");
+    printf("\n\r æŒ‰é”®1-4åˆ†åˆ«åˆ‡æ¢ä¸åŒä¼ æ„Ÿå™¨çš„æ˜¾ç¤º\r\n");
     printf("\n\r-------------------------------------------------\r\n");
     
 		int initcnt = 0;
@@ -812,9 +831,9 @@ int main( void )
 				if(flag1 == 1)
 				{
 					flag1 = 0;
-					I2C_ZLG7290_Read(&hi2c1,0x71,0x01,Rx1_Buffer,1);//¶Á¼üÖµ
-					printf("\n\r°´¼ü¼üÖµ = %#x\r\n",Rx1_Buffer[0]);//Ïë´®¿Ú·¢ËÍ¼üÖµ
-					swtich_key();//É¨Ãè¼üÖµ£¬Ğ´±êÖ¾Î»
+					I2C_ZLG7290_Read(&hi2c1,0x71,0x01,Rx1_Buffer,1);//è¯»é”®å€¼
+					printf("\n\ræŒ‰é”®é”®å€¼ = %#x\r\n",Rx1_Buffer[0]);//æƒ³ä¸²å£å‘é€é”®å€¼
+					swtich_key();//æ‰«æé”®å€¼ï¼Œå†™æ ‡å¿—ä½
 				}		
 
         //Remote_Infrared_KeyDeCode();
@@ -1087,7 +1106,7 @@ void SystemClock_Config( void )  /* modified */
 int fputc( int ch, FILE *f )
 {
     while ( (USART1->SR & 0X40) == 0 )
-        ;            /* Ñ­»··¢ËÍ,Ö±µ½·¢ËÍÍê±Ï */
+        ;            /* å¾ªç¯å‘é€,ç›´åˆ°å‘é€å®Œæ¯• */
     USART1->DR = (uint8_t) ch;
     return(ch);
 }
