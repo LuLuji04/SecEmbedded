@@ -109,6 +109,7 @@ uint8_t		now_alcohol_check = 0;
 uint8_t		now_flame_check = 0;
 uint32_t	unStartFlag __attribute__( (section( "NO_INIT" ), zero_init) );
 int sensor_type __attribute__( (section( "NO_INIT" ), zero_init) );
+int sensor_type_backup[3];
 
 /* backup data struct */
 typedef struct backup {
@@ -118,7 +119,7 @@ typedef struct backup {
     float   now_alcohol;
     float   now_flame;
     uint8_t checksum;
-} Backup[3];
+} Backup;
 
 Backup* backup_data;
 /* USER CODE END PV */
@@ -263,7 +264,7 @@ void recovery_handle()
     set_now_light( backup_data->now_light );
     set_now_gas(backup_data->now_gas);
     set_now_alcohol(backup_data->now_alcohol);
-		set_now_flame(backup_data->now_flame);
+	set_now_flame(backup_data->now_flame);
     printf( "[Warning] data is broken, recovering from heap\n" );
 }
 
@@ -547,6 +548,20 @@ void show_sensor_data()
             tmp = now_gas * scaling_factor;
             Tx1_Buffer[0] = 0xBC; // 字母G的段码
             break;
+        default:
+            int tmp_backup[3] = 0;
+            for(int i = 0;i<3;i++)
+            {
+                tmp_backup[sensor_type_backup[i]]++;
+            }
+            for(int i = 0;i<3;i++)
+            {
+                if(tmp_backup[i] >= 2)
+                    sensor_type = tmp_backup[i];
+            }
+            if(sensor_type != 0 && sensor_type != 1 && sensor_type != 2 && sensor_type != 3)
+                HAL_NVIC_SystemReset();
+            break;
     }
     
     Rx2_Buffer[0] = Tx1_Buffer[0];
@@ -782,7 +797,8 @@ int main( void )
     MX_IWDG_Start();                                        /* 开启看门狗 */
     set_buffer( Rx2_Buffer );
     
-	printf("\n\r");
+		
+		printf("\n\r");
     printf("\n\r-------------------------------------------------\r\n");
     printf("\n\r 多传感器显示与按键切换系统\r\n");
     printf("\n\r 按键1-4分别切换不同传感器的显示\r\n");
@@ -872,19 +888,35 @@ void swtich_key(void)
 	{
         case 0x1C:
 					flag = 1;
-					sensor_type = 0;			
+					sensor_type = 0;
+                    for(int i = 0;i<3;i++)
+                    {
+                        sensor_type_backup[i] = 0;
+                    }		
           break;
         case 0x1B:	
 					flag = 2;
 				sensor_type = 1;	
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 1;
+                }		
           break;
         case 0x1A:	
 					flag = 3;
-				sensor_type = 2;	
+				sensor_type = 2;
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 2;
+                }			
           break;
         case 0x14:
 					flag = 4;
-				sensor_type = 3;	
+				sensor_type = 3;
+                for(int i = 0;i<3;i++)
+                {
+                    sensor_type_backup[i] = 3;
+                }			
           break;   
 				case 0x13:
 					flag = 5;
